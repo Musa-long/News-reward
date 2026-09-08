@@ -1,0 +1,2 @@
+# News-reward
+Rewards 
