@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard</title><link rel="stylesheet" href="/styles.css"></head><body><header class="top"><div class="brand">🇳🇬 Nigeria News Rewards</div><nav><button id="logout" class="linkbtn">Logout</button></nav></header><main class="dash"><div class="welcome"><div><p class="muted">Member dashboard</p><h1 id="name">Loading...</h1></div><span id="plan" class="pill"></span></div><div class="grid four"><div class="stat"><span>Available balance</span><strong id="balance">₦0</strong></div><div class="stat"><span>Today's reward</span><strong id="today">—</strong></div><div class="stat"><span>Total earned</span><strong id="earned">₦0</strong></div><div class="stat"><span>Referral code</span><strong id="ref">—</strong></div></div><div class="grid two"><section class="card"><h2>📰 Today's News</h2><div id="news"></div></section><section class="card"><h2>⚡ Actions</h2><button class="btn full" id="withdrawBtn">Withdraw</button><button class="btn ghost full" id="depositBtn">Deposit</button><button class="btn legend full" id="upgradeBtn">👑 Upgrade to Legend — ₦2,000</button><a class="btn ghost full" id="supportWhatsApp" href="#" target="_blank">💬 Customer Care</a><p class="notice">Withdrawal window: Monday 8:00 AM–12:00 PM (Africa/Lagos). Minimum: ₦5,000.</p></section></div><section class="card"><h2>Transactions</h2><div id="tx"></div></section></main><div id="modal" class="modal"><div class="modalbox"><button class="x" onclick="closeModal()">×</button><div id="modalContent"></div></div></div><script>
+const money=n=>'₦'+Number(n||0).toLocaleString();
+async function api(url,opt={}){let r=await fetch(url,opt);let j=await r.json();if(r.status===401){location='/login.html';throw 0}if(!r.ok)throw new Error(j.error||'Request failed');return j}
+function openModal(html){modalContent.innerHTML=html;modal.classList.add('show')}function closeModal(){modal.classList.remove('show')}
+async function load(){let u=await api('/api/me');name.textContent='Good day, '+u.name+' 👋';plan.textContent=u.plan==='legend'?'LEGEND':'FREE MEMBER';balance.textContent=money(u.balance);earned.textContent=money(u.total_earned);ref.textContent=u.referral_code;today.textContent=u.claimedToday?'Claimed':'Not yet';news.innerHTML=u.news.map(n=>`<article class="news"><span>${n.category}</span><h3>${n.title}</h3><p>${n.body}</p><button class="btn small" onclick="read(${n.id})">${u.claimedToday?'Already claimed':'Read & claim daily reward'}</button></article>`).join('');loadTx()}
+async function read(id){try{let j=await api('/api/read/'+id,{method:'POST'});alert('Reward credited: '+money(j.reward));load()}catch(e){alert(e.message)}}
+async function loadTx(){let t=await api('/api/transactions');tx.innerHTML=[...t.upgrades.map(x=>`<p>Legend upgrade • ₦${x.amount.toLocaleString()} • <b>${x.status}</b></p>`),...t.deposits.map(x=>`<p>Deposit • ₦${x.amount.toLocaleString()} • <b>${x.status}</b></p>`),...t.withdrawals.map(x=>`<p>Withdrawal • ₦${x.amount.toLocaleString()} • <b>${x.status}</b></p>`)].join('')||'<p class="muted">No transactions yet.</p>'}
+upgradeBtn.onclick=()=>openModal(`<h2>Upgrade to Legend</h2><p>Pay ₦2,000 to the bank details below, then submit your payment reference for admin verification.</p><div class="bank"><b>Bank:</b> <span id="bankName">Bank details loading...</span><br><b>Account name:</b> <span id="bankAccountName"></span><br><b>Account number:</b> <span id="bankAccountNumber"></span></div><form id="uf"><label>Payment reference<input name="reference" required></label><label>Proof / note<textarea name="proof" placeholder="Optional: describe or paste proof details"></textarea></label><button class="btn">Submit upgrade request</button></form>`);uf.onsubmit=async e=>{e.preventDefault();let r=await api('/api/upgrade-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(uf)))});alert(r.message);closeModal();load()}
+depositBtn.onclick=()=>openModal(`<h2>Deposit</h2><p>Submit a deposit record for admin review. For Legend activation, use the dedicated Upgrade button.</p><form id="df"><label>Amount<input type="number" name="amount" min="1" required></label><label>Reference<input name="reference"></label><label>Note<textarea name="note"></textarea></label><button class="btn">Submit deposit</button></form>`);df.onsubmit=async e=>{e.preventDefault();await api('/api/deposit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(df)))});alert('Deposit submitted.');closeModal();loadTx()}
+withdrawBtn.onclick=()=>openModal(`<h2>Withdraw</h2><p>Minimum ₦5,000. Requests are accepted Monday 8:00 AM–12:00 PM (Africa/Lagos).</p><form id="wf"><label>Amount<input type="number" name="amount" min="5000" required></label><label>Bank name<input name="bankName" required></label><label>Account name<input name="accountName" required></label><label>Account number<input name="accountNumber" required></label><button class="btn">Submit withdrawal</button></form>`);wf.onsubmit=async e=>{e.preventDefault();try{await api('/api/withdraw',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(wf)))});alert('Withdrawal request submitted.');closeModal();load()}catch(e){alert(e.message)}}
+logout.onclick=async()=>{await api('/api/logout',{method:'POST'});location='/'};
+load();
+</script>
+<script>
+window.siteConfig = {};
+function waHref(number){
+  let n=String(number||'').replace(/\D/g,'');
+  if(n.startsWith('0')) n='234'+n.slice(1);
+  return n ? 'https://wa.me/'+n : '#';
+}
+async function loadSiteConfig(){
+  try{
+    const r=await fetch('/api/config');
+    const c=await r.json();
+    window.siteConfig=c;
+    const w=document.getElementById('supportWhatsApp');
+    if(w){ w.href=waHref(c.whatsapp); }
+    const bn=document.getElementById('bankName');
+    const ba=document.getElementById('bankAccountNumber');
+    const an=document.getElementById('bankAccountName');
+    if(bn) bn.textContent=c.bank?.name||'';
+    if(ba) ba.textContent=c.bank?.accountNumber||'';
+    if(an) an.textContent=c.bank?.accountName||'';
+    document.querySelectorAll('[data-legend-fee]').forEach(e=>e.textContent='₦'+Number(c.legendFee||2000).toLocaleString());
+    document.querySelectorAll('[data-free-reward]').forEach(e=>e.textContent='₦'+Number(c.freeReward||100).toLocaleString());
+    document.querySelectorAll('[data-legend-reward]').forEach(e=>e.textContent='₦'+Number(c.legendReward||1000).toLocaleString());
+  }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',loadSiteConfig);
+</script>
+</body></html>
