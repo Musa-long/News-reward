@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NairaFlow - USDT Exchange</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background: #0a0f0d; color: #fff; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+    .container { width: 100%; max-width: 450px; }
+    .logo-box { width: 48px; height: 48px; background: #00ff88; border-radius: 14px; margin-bottom: 8px; }
+    .brand-sub { font-size: 13px; color: #888; letter-spacing: 1px; font-weight: 600; }
+    .tagline { font-size: 14px; color: #00ff88; font-weight: 800; letter-spacing: 2px; margin: 12px 0; }
+    h1 { font-size: 32px; font-weight: 900; margin-bottom: 10px; line-height: 1.2; color: #fff; }
+    .subtitle { color: #aaa; font-size: 14px; margin-bottom: 25px; font-weight: 500; }
+    .card { background: #121a16; border: 1px solid #1e2a24; border-radius: 16px; padding: 20px; }
+    .rate-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .rate-label { font-size: 13px; color: #aaa; font-weight: 600; }
+    .live-badge { background: #00ff8822; color: #00ff88; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 4px; }
+    .rate { font-size: 26px; color: #00ff88; font-weight: 900; margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .label { font-size: 13px; color: #ccc; margin-bottom: 8px; font-weight: 700; }
+    .input-box { background: #1a231f; border: 1px solid #2a3a32; border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 10px; }
+    .input-box input { background: transparent; border: none; outline: none; color: #fff; width: 100%; font-size: 15px; font-weight: 600; }
+    .input-box input::placeholder { color: #666; font-weight: 500; }
+    .usdt-preview { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px; font-weight: 600; }
+    .usdt-value { color: #00ff88; font-weight: 900; font-size: 16px; }
+    .note { background: #1a231f; border-radius: 10px; padding: 12px; font-size: 12px; color: #aaa; display: flex; gap: 8px; margin-bottom: 20px; font-weight: 600; }
+    .btn { width: 100%; padding: 16px; background: #00ff88; color: #000; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 5px; }
+    .btn:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-box"></div>
+    <div class="brand-sub">USDT EXCHANGE</div>
+    <div class="tagline">YOUR MONEY, IN MOTION</div>
+
+    <h1>BUY USDT WITH<br>NAIRA</h1>
+    <p class="subtitle">Enter your Naira amount, provide your USDT wallet address and place your order.</p>
+    
+    <div class="card">
+      <div class="rate-box">
+        <div class="rate-label">Current rate</div>
+        <div class="live-badge"><span style="width:6px;height:6px;background:#00ff88;border-radius:50%;display:inline-block;"></span> LIVE</div>
+      </div>
+      <div class="rate">₦<span id="rate">1550</span> / USDT</div>
+
+      <div class="form-group">
+        <div class="label">Full Name</div>
+        <div class="input-box">
+          <span>👤</span>
+          <input type="text" id="fullName" placeholder="Enter your full name">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label">Naira amount</div>
+        <div class="input-box">
+          <span>₦</span>
+          <input type="number" id="nairaAmount" placeholder="50000" min="1000">
+        </div>
+      </div>
+
+      <div class="usdt-preview">
+        <span>USDT you will receive</span>
+        <span class="usdt-value" id="usdtPreview">0.0000 USDT</span>
+      </div>
+
+      <div class="form-group">
+        <div class="label">USDT wallet address</div>
+        <div class="input-box">
+          <span>🔗</span>
+          <input type="text" id="wallet" placeholder="Paste your TRC20 wallet">
+        </div>
+      </div>
+
+      <div class="note">
+        <span>ℹ️</span>
+        <span>Network: TRC20 — Make sure your wallet supports TRC20 network only.</span>
+      </div>
+
+      <button class="btn" id="buyBtn">BUY USDT NOW</button>
+    </div>
+  </div>
+
+  <script>
+    const rate = 1550; // CHANGED TO 1550 TO MATCH YOUR SCREENSHOT
+    document.getElementById('rate').innerText = rate.toLocaleString();
+
+    document.getElementById('nairaAmount').addEventListener('input', (e) => {
+        const naira = parseFloat(e.target.value) || 0;
+        const usdt = naira / rate;
+        document.getElementById('usdtPreview').innerText = usdt.toFixed(4) + ' USDT';
+    });
+
+    document.getElementById('buyBtn').addEventListener('click', () => {
+        const name = document.getElementById('fullName').value.trim();
+        const nairaAmount = parseFloat(document.getElementById('nairaAmount').value);
+        const wallet = document.getElementById('wallet').value.trim();
+        
+        if(!name ||!nairaAmount || nairaAmount < 1000 ||!wallet){
+            alert('Please fill all fields. Minimum ₦1000');
+            return;
+        }
+
+        const orderData = {
+            name: name,
+            amount: (nairaAmount / rate).toFixed(4),
+            rate: rate.toLocaleString(),
+            totalNaira: nairaAmount,
+            wallet: wallet
+        };
+
+        localStorage.setItem('orderData', JSON.stringify(orderData));
+        window.location.href = '/bank-details.html';
+    });
+  </script>
+</body>
+  </html>
